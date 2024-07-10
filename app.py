@@ -1,11 +1,11 @@
-import os
+
 from flask import Flask
 
 
 from flask_migrate import Migrate
 from flask_restful import Resource, Api
 
-from models import db,  User, Project, Task 
+from models import db, User, Project, Task, Tag, TaskTag
 
 
 

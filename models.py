@@ -35,8 +35,8 @@ class User(db.Model, SerializerMixin):
     
     serialize_rules = ('-password',)
 
-   
-    
+
+
     
     projects = db.relationship('Project', backref='user', lazy=True)
     
@@ -74,7 +74,7 @@ class Task(db.Model, SerializerMixin):
     
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
     
-   
+
 class Tag(db.Model):
     __tablename__ = 'tag'
     
