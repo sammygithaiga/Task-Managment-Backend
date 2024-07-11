@@ -8,7 +8,7 @@ class SignupResource(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('username', required=True, help="Username is required")
     parser.add_argument('email', required=True, help="Email address is required")
-    parser.add_argument('password', required=True, help="Password is required")
+    parser.add_argument('password_hash', required=True, help="Password is required")
 
     def post(self):
        
@@ -35,7 +35,7 @@ class LoginResource(Resource):
     
     parser = reqparse.RequestParser()
     parser.add_argument('email', required=True, help="Email address is required")
-    parser.add_argument('password', required=True, help="Password is required")
+    parser.add_argument('password_hash', required=True, help="Password is required")
 
     def post(self):
       

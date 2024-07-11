@@ -13,8 +13,8 @@ with app.app_context():
 
     
     print("Seeding users")
-    user1 = User(name="Alice", email="alice@example.com", password="password123", role="admin", created_at=datetime.now(), updated_at=datetime.now())
-    user2 = User(name="Bob", email="bob@example.com", password="password123", role="member", created_at=datetime.now(), updated_at=datetime.now())
+    user1 = User(username="Alice", email="alice@example.com", password_hash="password123")
+    user2 = User(username="Bob", email="bob@example.com", password_hash="password123")
     
     db.session.add_all([user1, user2])
     db.session.commit()
@@ -22,8 +22,8 @@ with app.app_context():
 
     
     print("Seeding projects")
-    project1 = Project(name="Project Alpha", description="First project", user_id=user1.id, created_at=datetime.now(), updated_at=datetime.now())
-    project2 = Project(name="Project Beta", description="Second project", user_id=user2.id, created_at=datetime.now(), updated_at=datetime.now())
+    project1 = Project(title="Project Alpha", description="First project", user_id=user1.id, created_at=datetime.now(), updated_at=datetime.now())
+    project2 = Project(title="Project Beta", description="Second project", user_id=user2.id, created_at=datetime.now(), updated_at=datetime.now())
     
     db.session.add_all([project1, project2])
     db.session.commit()
