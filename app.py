@@ -2,9 +2,14 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from models import db
+from resources.project import ProjectResource
 from resources.useer import LoginResource, SignupResource
+from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = 'uper-secret'  # Change this to a secret key
+
+jwt_manager = JWTManager(app)
 api = Api(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database.db'
@@ -24,6 +29,7 @@ class HelloWorld(Resource):
 api.add_resource(HelloWorld, '/')
 api.add_resource(SignupResource, '/signup')
 api.add_resource(LoginResource, '/login')
+api.add_resource(ProjectResource, '/project')
 
 
 if __name__ == '__main__':
