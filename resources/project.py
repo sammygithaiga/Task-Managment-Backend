@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Project, User
 from datetime import datetime
 
+
 class ProjectResource(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('name', required=True, help="Name is required")

@@ -10,7 +10,7 @@ class SignupResource(Resource):
         self.parser.add_argument('email', type=str, required=True, help="Email address is required")
         self.parser.add_argument('password_hash', type=str, required=True, help="Password_hash is required")
         self.parser.add_argument('role', type=str, required=True, help="Role is required")
-        self.parser.add_argument('profile picture', type=str, required=True, help="Profile picture is required")
+        self.parser.add_argument('profile_picture', type=str, required=True, help="Profile picture is required")
         super(SignupResource, self).__init__()
 
     def post(self):
@@ -29,7 +29,7 @@ class SignupResource(Resource):
         password_hash = generate_password_hash(data['password_hash']).decode('utf-8')
 
         # Create new user
-        new_user = User(username=data['username'], email=data['email'], password_hash=password_hash)
+        new_user = User(username=data['username'], email=data['email'], password_hash=password_hash, role=data['role'], profile_picture=data['profile_picture'])
 
         try:
             # Save user to database
@@ -45,7 +45,9 @@ class SignupResource(Resource):
 class LoginResource(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('email', required=True, help="Email address is required")
-    parser.add_argument('password_hash', required=True, help="Password is required")
+    parser.add_argument('password', required=True, help="Password is required")
+    parser.add_argument('role', required=True, help="Role is required")
+    
 
     def post(self):
         data = self.parser.parse_args()
@@ -54,8 +56,7 @@ class LoginResource(Resource):
 
         if user and check_password_hash(user.password_hash, data['password']):
             user_dict = {"id": user.id, "role": user.role}
-            additional_claims = {"role": user_dict['role']}
-            access_token = create_access_token(identity=user_dict['id'], additional_claims=additional_claims)
+            access_token = create_access_token(identity=user_dict['id'])
             return {"message": "Login successful", "status": "success", "access_token": access_token, "user": user_dict}
         
         return {"message": "Invalid credentials", "status": "fail"}, 401
