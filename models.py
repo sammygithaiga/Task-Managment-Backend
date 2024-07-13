@@ -34,7 +34,7 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, unique=True, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     profile_picture = db.Column(db.String, nullable=True)
-    role = db.Column(db.String(20), nullable=False, default='user')
+    role = db.Column(db.String(20), nullable=False, default='user') 
 
     serialize_rules = ('-password',)
     serialize_only = ('id', 'username', 'email', 'role')

@@ -10,7 +10,6 @@ from resources.task import TaskResource
 from resources.useer import LoginResource, SignupResource
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'b1c6dd628b391a653ef79c14d96acae5d1103dad006b441ab6fb2c203b4a3b28'  
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 
 jwt_manager = JWTManager(app)
@@ -41,5 +40,5 @@ api.add_resource(TaskResource, '/tasks')
 secret_key = os.urandom(32).hex()
 print(f"Generated JWT_SECRET_KEY: {secret_key}")
 
-if __name__ == '__main__':
+if __name__ == '_main_':
     app.run(port=5000)

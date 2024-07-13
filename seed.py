@@ -15,7 +15,7 @@ with app.app_context():
     print("Seeding users")
     user1 = User(username="Alice", email="alice@example.com", password_hash="password123")
     user2 = User(username="Bob", email="bob@example.com", password_hash="password123")
-    
+    user2 = User(username="Me", email="Me@example.com", password_hash="password123")
     db.session.add_all([user1, user2])
     db.session.commit()
     print("Users seeded")
