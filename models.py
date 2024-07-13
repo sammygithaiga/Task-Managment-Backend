@@ -31,7 +31,7 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, unique=True, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     profile_picture = db.Column(db.String, nullable=True)
-    role = db.Column(db.String(20), nullable=False, default='user')  # Add this line
+    role = db.Column(db.String(20), nullable=False, default='user')  
 
     def to_dict(self):
         return {"id": self.id, "username": self.username, "email": self.email, "role": self.role}

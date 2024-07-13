@@ -1,13 +1,16 @@
+import os
 from flask import Flask
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
+from flask_jwt_extended import JWTManager
+from datetime import timedelta
 from models import db
 from resources.project import ProjectResource
 from resources.useer import LoginResource, SignupResource
-from flask_jwt_extended import JWTManager
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'uper-secret'  # Change this to a secret key
+app.config['JWT_SECRET_KEY'] = 'super-secret'  
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 
 jwt_manager = JWTManager(app)
 api = Api(app)
@@ -31,6 +34,8 @@ api.add_resource(SignupResource, '/signup')
 api.add_resource(LoginResource, '/login')
 api.add_resource(ProjectResource, '/project')
 
+secret_key = os.urandom(32).hex()
+print(f"Generated JWT_SECRET_KEY: {secret_key}")
 
-if __name__ == '__main__':
+if __name__ == '_main_':
     app.run(port=5000)
