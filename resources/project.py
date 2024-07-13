@@ -1,13 +1,14 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Project, User
+from models import db, Project
 from datetime import datetime
 
-
 class ProjectResource(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('name', required=True, help="Name is required")
-    parser.add_argument('description', required=True, help="Description is required")
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('title', required=True, help="Title is required")
+        self.parser.add_argument('description', required=True, help="Description is required")
+        super(ProjectResource, self).__init__()
 
     @jwt_required()
     def post(self):
@@ -15,7 +16,7 @@ class ProjectResource(Resource):
         user_id = get_jwt_identity()
         
         new_project = Project(
-            name=data['name'],
+            title=data['title'],
             description=data['description'],
             user_id=user_id,
             created_at=datetime.now(),
@@ -27,6 +28,14 @@ class ProjectResource(Resource):
         
         return {"message": "Project created successfully", "project": new_project.to_dict()}, 201
 
+
+class ProjectItemResource(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('title', required=True, help="Title is required")
+        self.parser.add_argument('description', required=True, help="Description is required")
+        super(ProjectItemResource, self).__init__()
+
     @jwt_required()
     def put(self, project_id):
         data = self.parser.parse_args()
@@ -37,7 +46,7 @@ class ProjectResource(Resource):
         if not project:
             return {"message": "Project not found or not authorized"}, 404
 
-        project.name = data['name']
+        project.title = data['title']
         project.description = data['description']
         project.updated_at = datetime.now()
         
@@ -70,6 +79,7 @@ class ProjectResource(Resource):
             return {"message": "Project not found or not authorized"}, 404
         
         return {"project": project.to_dict()}, 200
+
 
 class ProjectListResource(Resource):
     @jwt_required()

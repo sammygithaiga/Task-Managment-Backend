@@ -5,11 +5,11 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from models import db
-from resources.project import ProjectResource
+from resources.project import ProjectItemResource, ProjectListResource, ProjectResource
+from resources.task import TaskResource
 from resources.useer import LoginResource, SignupResource
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'super-secret'  
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 
 jwt_manager = JWTManager(app)
@@ -33,6 +33,9 @@ api.add_resource(HelloWorld, '/')
 api.add_resource(SignupResource, '/signup')
 api.add_resource(LoginResource, '/login')
 api.add_resource(ProjectResource, '/project')
+api.add_resource(ProjectItemResource, '/project/<int:project_id>')
+api.add_resource(ProjectListResource, '/projects')
+api.add_resource(TaskResource, '/tasks')
 
 secret_key = os.urandom(32).hex()
 print(f"Generated JWT_SECRET_KEY: {secret_key}")

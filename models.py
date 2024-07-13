@@ -3,10 +3,6 @@ from sqlalchemy import MetaData
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
 
-
-
-
-
 convention = {
     "ix": 'ix_%(column_0_label)s',
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -15,34 +11,36 @@ convention = {
     "pk": "pk_%(table_name)s"
 }
 
+metaData = MetaData(naming_convention=convention)
 
-metaData = MetaData(naming_convention = convention)
+db = SQLAlchemy(metadata=metaData)
 
-db = SQLAlchemy(metadata = metaData)
-
+class CustomSerializer(SerializerMixin):
+    def serialize(self, model):
+        # Handle serialization of model attributes here
+        # Use a recursive function with a max_depth parameter to avoid infinite recursion
+        def recursive_serialize(attr, depth=0):
+            if depth > 5:  # adjust the max_depth value as needed
+                return None
+            # serialize the attribute recursively
+            return recursive_serialize(attr.related_model, depth + 1)
+        # ...
 
 class User(db.Model, SerializerMixin):
-    
     __tablename__ = 'user'
-    
-    
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     profile_picture = db.Column(db.String, nullable=True)
-    role = db.Column(db.String(20), nullable=False, default='user')  
+    role = db.Column(db.String(20), nullable=False, default='user') 
 
-    def to_dict(self):
-        return {"id": self.id, "username": self.username, "email": self.email, "role": self.role}
-    
-    
     serialize_rules = ('-password',)
+    serialize_only = ('id', 'username', 'email', 'role')
 
-
-
-    
     projects = db.relationship('Project', backref='user', lazy=True)
+
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
@@ -50,51 +48,47 @@ class User(db.Model, SerializerMixin):
     @classmethod
     def find_by_email(cls, email):
         return cls.query.filter_by(email=email).first()
-    
-    
+
 class Project(db.Model, SerializerMixin):
     __tablename__ = 'project'
-    
-    id = db.Column(db.Integer, primary_key=True)  
-    title = db.Column(db.String, nullable=False) 
-    description = db.Column(db.Text, nullable=True)  
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False)
-    updated_at = db.Column(db.TIMESTAMP, nullable=False) 
-    
+    updated_at = db.Column(db.TIMESTAMP, nullable=False)
+
+    serialize_only = ('id', 'title', 'description', 'created_at', 'updated_at')
+
     tasks = db.relationship('Task', backref='project', lazy=True)
-    
-    
+
 class Task(db.Model, SerializerMixin):
     __tablename__ = 'task'
-    
-    
-    
-    
-    id = db.Column(db.Integer, primary_key=True) 
-    title = db.Column(db.String, nullable=False)  
-    description = db.Column(db.Text, nullable=True)  
-    due_date = db.Column(db.DateTime, nullable=True)  
-    priority = db.Column(db.String, nullable=True) 
-    status = db.Column(db.String, nullable=True)  
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False) 
-    created_at = db.Column(db.Date, nullable=False)  
-    updated_at = db.Column(db.Date, nullable=False)  
-    
-    
-    
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    due_date = db.Column(db.DateTime, nullable=True)
+    priority = db.Column(db.String, nullable=True)
+    status = db.Column(db.String, nullable=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    created_at = db.Column(db.Date, nullable=False)
+    updated_at = db.Column(db.Date, nullable=False)
+
+    serialize_only = ('id', 'title', 'description', 'due_date', 'priority', 'status', 'created_at', 'updated_at')
+
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
-    
 
 class Tag(db.Model):
     __tablename__ = 'tag'
-    
-    id = db.Column(db.Integer, primary_key=True) 
-    name = db.Column(db.String(50), unique=True, nullable=False)  
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
 
 class TaskTag(db.Model):
     __tablename__ = 'task_tags'
-    
-    id = db.Column(db.Integer, primary_key=True)  
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)  
-    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), nullable=False) 
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), nullable=False)
