@@ -1,38 +1,49 @@
+from flask import request
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Task, Project
+from datetime import datetime
 
 class TaskResource(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('title', required=True, help="Title is required")
-    parser.add_argument('description', required=False, help="Description")
-    parser.add_argument('due_date', required=False, help="Due date")
-    parser.add_argument('priority', required=False, help="Priority")
-    parser.add_argument('status', required=False, help="Status")
+    parser.add_argument('description', required=True, help="Description")
+    parser.add_argument('due_date', required=True, help="Due date")
+    parser.add_argument('priority', required=True, help="Priority")
+    parser.add_argument('status', required=True, help="Status")
     parser.add_argument('project_id', required=True, help="Project ID is required")
 
     @jwt_required()
     def get(self, task_id):
         task = Task.query.get(task_id)
         if task:
-            return {"task": task.to_dict(), "status": "success"}
-        return {"message": "Task not found", "status": "fail"}, 404
+            return {"task": task.to_dict(), "status": "success"}, 200
+        else:
+            return {"message": "Task not found", "status": "fail"}, 404
 
     @jwt_required()
     def post(self):
         data = self.parser.parse_args()
         current_user = get_jwt_identity()
+        
+        try:
+            due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
+        except ValueError:
+            return {"message": "Invalid due date format. Please use 'YYYY-MM-DD'", "status": "fail"}, 400
 
         project = Project.query.get(data['project_id'])
-        if project.user_id != current_user:
+        if not project:
+            return {"message": "Project not found", "status": "fail"}, 404
+        
+        if project.user_id != int(current_user):
             return {"message": "Not authorized to add task to this project", "status": "fail"}, 403
 
         task = Task(
             title=data['title'],
-            description=data.get('description'),
-            due_date=data.get('due_date'),
-            priority=data.get('priority'),
-            status=data.get('status'),
+            description=data['description'],
+            due_date=due_date,
+            priority=data['priority'],
+            status=data['status'],
             project_id=data['project_id']
         )
 
@@ -51,14 +62,21 @@ class TaskResource(Resource):
 
         current_user = get_jwt_identity()
         project = Project.query.get(task.project_id)
-        if project.user_id != current_user:
+        if not project:
+            return {"message": "Project not found", "status": "fail"}, 404
+        
+        if project.user_id != int(current_user):
             return {"message": "Not authorized to update this task", "status": "fail"}, 403
 
         task.title = data['title']
-        task.description = data.get('description')
-        task.due_date = data.get('due_date')
-        task.priority = data.get('priority')
-        task.status = data.get('status')
+        task.description = data['description']
+        if data['due_date']:
+            try:
+                task.due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
+            except ValueError:
+                return {"message": "Invalid due date format. Please use 'YYYY-MM-DD'", "status": "fail"}, 400
+        task.priority = data['priority']
+        task.status = data['status']
 
         db.session.commit()
 
@@ -73,17 +91,13 @@ class TaskResource(Resource):
 
         current_user = get_jwt_identity()
         project = Project.query.get(task.project_id)
-        if project.user_id != current_user:
+        if not project:
+            return {"message": "Project not found", "status": "fail"}, 404
+        
+        if project.user_id != int(current_user):
             return {"message": "Not authorized to delete this task", "status": "fail"}, 403
 
         db.session.delete(task)
         db.session.commit()
 
         return {"message": "Task deleted successfully", "status": "success"}
-
-class TaskListResource(Resource):
-    @jwt_required()
-    def get(self):
-        current_user = get_jwt_identity()
-        tasks = Task.query.join(Project).filter(Project.user_id == current_user).all()
-        return {"tasks": [task.to_dict() for task in tasks], "status": "success"}

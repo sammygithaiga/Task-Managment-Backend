@@ -1,7 +1,9 @@
+from flask import request
 from flask_restful import Resource, reqparse
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from flask_bcrypt import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
 from models import db, User
+from functools import wraps
 
 class SignupResource(Resource):
     def __init__(self):
@@ -16,7 +18,6 @@ class SignupResource(Resource):
     def post(self):
         data = self.parser.parse_args()
 
-        # Check if username or email already exists
         username_exists = User.query.filter_by(username=data['username']).first()
         email_exists = User.query.filter_by(email=data['email']).first()
         if username_exists or email_exists:
@@ -25,7 +26,6 @@ class SignupResource(Resource):
             else:
                 return {"message": "Email address already taken", "status": "fail"}, 422
 
-        # Generate password hash
         password_hash = generate_password_hash(data['password_hash']).decode('utf-8')
 
         # Create new user
@@ -47,7 +47,6 @@ class LoginResource(Resource):
     parser.add_argument('email', required=True, help="Email address is required")
     parser.add_argument('password', required=True, help="Password is required")
     parser.add_argument('role', required=True, help="Role is required")
-    
 
     def post(self):
         data = self.parser.parse_args()
@@ -55,8 +54,46 @@ class LoginResource(Resource):
         user = User.query.filter_by(email=data['email']).first()
 
         if user and check_password_hash(user.password_hash, data['password']):
-            user_dict = {"id": user.id, "role": user.role}
-            access_token = create_access_token(identity=user_dict['id'])
-            return {"message": "Login successful", "status": "success", "access_token": access_token, "user": user_dict}
-        
-        return {"message": "Invalid credentials", "status": "fail"}, 401
+            if data['role'] == user.role:
+                user_dict = {"id": user.id, "role": user.role}
+                access_token = create_access_token(identity=user_dict)
+                if user.role == 'admin':
+                    return {"message": "Login successful", "status": "success", "access_token": access_token, "user": user_dict, "redirect": "/admin"}
+                else:
+                    return {"message": "Login successful", "status": "success", "access_token": access_token, "user": user_dict, "redirect": "/user"}
+            else:
+                return {"message": "Invalid role", "status": "fail"}, 401
+        else:
+            return {"message": "Invalid credentials", "status": "fail"}, 401
+
+
+def admin_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if user.role != 'admin':
+            return {"message": "Only admins are allowed to access this resource"}, 403
+        return func(*args, **kwargs)
+    return decorated_function
+
+
+class ProtectedResource(Resource):
+    @jwt_required
+    def get(self):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if user.role == 'admin':
+            # Return admin view or perform admin actions
+            return {"message": "Admin view"}
+        else:
+            # Return user view or perform user actions
+            return {"message": "User view"}
+
+
+class AdminResource(Resource):
+    @jwt_required
+    @admin_required
+    def get(self):
+        # This resource is only accessible by admins
+        return {"message": "Admin resource"}

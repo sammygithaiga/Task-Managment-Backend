@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, ForeignKey
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.ext.associationproxy import association_proxy
+from datetime import datetime
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -11,29 +11,22 @@ convention = {
     "pk": "pk_%(table_name)s"
 }
 
-metaData = MetaData(naming_convention=convention)
-
-db = SQLAlchemy(metadata=metaData)
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(metadata=metadata)
 
 class CustomSerializer(SerializerMixin):
     def serialize(self, model):
-        # Handle serialization of model attributes here
-        # Use a recursive function with a max_depth parameter to avoid infinite recursion
-        def recursive_serialize(attr, depth=0):
-            if depth > 5:  # adjust the max_depth value as needed
-                return None
-            # serialize the attribute recursively
-            return recursive_serialize(attr.related_model, depth + 1)
-        # ...
+        # Implement serialization logic here
+        pass
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
-    password_hash = db.Column(db.String, nullable=False)
-    profile_picture = db.Column(db.String, nullable=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    profile_picture = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), nullable=False, default='user') 
 
     serialize_rules = ('-password',)
@@ -53,11 +46,13 @@ class Project(db.Model, SerializerMixin):
     __tablename__ = 'project'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
+    title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.TIMESTAMP, nullable=False)
-    updated_at = db.Column(db.TIMESTAMP, nullable=False)
+    created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
+    comments = db.relationship('Comment', backref='project', lazy=True)
+
 
     serialize_only = ('id', 'title', 'description', 'created_at', 'updated_at')
 
@@ -67,18 +62,32 @@ class Task(db.Model, SerializerMixin):
     __tablename__ = 'task'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    due_date = db.Column(db.DateTime, nullable=True)
-    priority = db.Column(db.String, nullable=True)
-    status = db.Column(db.String, nullable=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False, default='')
+    due_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    priority = db.Column(db.String(50), nullable=False, default='Normal')
+    status = db.Column(db.String(50), nullable=False, default='Pending')
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    created_at = db.Column(db.Date, nullable=False)
-    updated_at = db.Column(db.Date, nullable=False)
+    created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
+    comments = db.relationship('Comment', backref='task', lazy=True)
 
     serialize_only = ('id', 'title', 'description', 'due_date', 'priority', 'status', 'created_at', 'updated_at')
 
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
+
+class Comment(db.Model, SerializerMixin):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('comments', lazy=True))
+    task = db.relationship('Task', backref=db.backref('comments', lazy=True))
+    project = db.relationship('Project', backref=db.backref('comments', lazy=True))
 
 class Tag(db.Model):
     __tablename__ = 'tag'
