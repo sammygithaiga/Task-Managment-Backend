@@ -28,17 +28,14 @@ class SignupResource(Resource):
 
         password_hash = generate_password_hash(data['password_hash']).decode('utf-8')
 
-        # Create new user
         new_user = User(username=data['username'], email=data['email'], password_hash=password_hash, role=data['role'], profile_picture=data['profile_picture'])
 
         try:
-            # Save user to database
             db.session.add(new_user)
             db.session.commit()
         except Exception as e:
             return {"message": "Error creating user", "status": "fail", "error": str(e)}, 500
 
-        # Return success message and user information
         return {"message": "User registered successfully", "status": "success", "user": {"id": new_user.id, "username": new_user.username, "role": new_user.role}}
 
 
@@ -84,10 +81,8 @@ class ProtectedResource(Resource):
         user_id = get_jwt_identity()
         user = User.query.get(user_id)
         if user.role == 'admin':
-            # Return admin view or perform admin actions
             return {"message": "Admin view"}
         else:
-            # Return user view or perform user actions
             return {"message": "User view"}
 
 
@@ -95,5 +90,4 @@ class AdminResource(Resource):
     @jwt_required
     @admin_required
     def get(self):
-        # This resource is only accessible by admins
         return {"message": "Admin resource"}

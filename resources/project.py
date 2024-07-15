@@ -72,7 +72,6 @@ class ProjectItemResource(Resource):
     def get(self, project_id):
         user_id = get_jwt_identity()
         
-        # Find the project
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
         
         if not project:
@@ -86,7 +85,6 @@ class ProjectListResource(Resource):
     def get(self):
         user_id = get_jwt_identity()
         
-        # Get all projects for the user
         projects = Project.query.filter_by(user_id=user_id).all()
         
         return {"projects": [project.to_dict() for project in projects]}, 200
