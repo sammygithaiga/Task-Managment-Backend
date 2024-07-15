@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData, ForeignKey
+from sqlalchemy import MetaData
 from sqlalchemy_serializer import SerializerMixin
 from datetime import datetime
 
@@ -29,7 +29,7 @@ class User(db.Model, SerializerMixin):
     profile_picture = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), nullable=False, default='user') 
 
-    serialize_rules = ('-password',)
+    serialize_rules = ('-password_hash',)
     serialize_only = ('id', 'username', 'email', 'role')
 
     projects = db.relationship('Project', backref='user', lazy=True)
@@ -50,9 +50,7 @@ class Project(db.Model, SerializerMixin):
     description = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
-    comments = db.relationship('Comment', backref='project', lazy=True)
-
+    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     serialize_only = ('id', 'title', 'description', 'created_at', 'updated_at')
 
@@ -69,25 +67,11 @@ class Task(db.Model, SerializerMixin):
     status = db.Column(db.String(50), nullable=False, default='Pending')
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
-    comments = db.relationship('Comment', backref='task', lazy=True)
+    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     serialize_only = ('id', 'title', 'description', 'due_date', 'priority', 'status', 'created_at', 'updated_at')
 
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
-
-class Comment(db.Model, SerializerMixin):
-    __tablename__ = 'comments'
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('comments', lazy=True))
-    task = db.relationship('Task', backref=db.backref('comments', lazy=True))
-    project = db.relationship('Project', backref=db.backref('comments', lazy=True))
 
 class Tag(db.Model):
     __tablename__ = 'tag'
@@ -98,6 +82,5 @@ class Tag(db.Model):
 class TaskTag(db.Model):
     __tablename__ = 'task_tags'
 
-    id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
-    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), primary_key=True)
