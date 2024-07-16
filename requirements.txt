@@ -11,4 +11,6 @@ flask-bcrypt
 sqlalchemy-serializer
 pipenv
 shell
+ft-samuel-errors
+psycopg2-binary
 psycopg2-binary
