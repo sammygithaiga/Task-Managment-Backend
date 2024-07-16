@@ -73,13 +73,13 @@ class Task(db.Model, SerializerMixin):
 
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
 
-class Tag(db.Model):
+class Tag(db.Model, SerializerMixin):
     __tablename__ = 'tag'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
 
-class TaskTag(db.Model):
+class TaskTag(db.Model, SerializerMixin):
     __tablename__ = 'task_tags'
 
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), primary_key=True)
