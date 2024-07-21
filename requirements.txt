@@ -12,3 +12,4 @@ sqlalchemy-serializer
 pipenv
 shell
 psycopg2-binary
+flask-cors
