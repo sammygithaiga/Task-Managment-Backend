@@ -21,8 +21,12 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 jwt_manager = JWTManager(app)
 api = Api(app)
 
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL')  #when commiting shoul be the one
 #app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///database.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
