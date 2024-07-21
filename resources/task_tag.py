@@ -24,7 +24,6 @@ class TaskResource(Resource):
         data = self.parser.parse_args()
         current_user = get_jwt_identity()
 
-        # Check if project_id belongs to current_user
         project = Project.query.get(data['project_id'])
         if not project or project.user_id != current_user:
             return {"message": "Not authorized to add task to this project", "status": "fail"}, 403
@@ -156,22 +155,18 @@ class TaskTagAssociationResource(Resource):
         data = self.parser.parse_args()
         current_user = get_jwt_identity()
 
-        # Check if the task belongs to the current user
         task = Task.query.get(data['task_id'])
         if not task or task.project.user_id != current_user:
             return {"message": "Task not found or not authorized", "status": "fail"}, 403
 
-        # Check if the tag belongs to the current user
         tag = Tag.query.get(data['tag_id'])
         if not tag or tag.user_id != current_user:
             return {"message": "Tag not found or not authorized", "status": "fail"}, 403
 
-        # Check if the association already exists
         existing_association = TaskTagAssociation.query.filter_by(task_id=data['task_id'], tag_id=data['tag_id']).first()
         if existing_association:
             return {"message": "Task-Tag association already exists", "status": "fail"}, 400
 
-        # Create the association
         association = TaskTagAssociation(
             task_id=data['task_id'],
             tag_id=data['tag_id']
@@ -187,17 +182,14 @@ class TaskTagAssociationResource(Resource):
         data = self.parser.parse_args()
         current_user = get_jwt_identity()
 
-        # Check if the association exists and belongs to the current user
         association = TaskTagAssociation.query.filter_by(task_id=data['task_id'], tag_id=data['tag_id']).first()
         if not association:
             return {"message": "Task-Tag association not found", "status": "fail"}, 404
 
-        # Check if the associated task belongs to the current user
         task = Task.query.get(data['task_id'])
         if not task or task.project.user_id != current_user:
             return {"message": "Task not found or not authorized", "status": "fail"}, 403
 
-        # Check if the associated tag belongs to the current user
         tag = Tag.query.get(data['tag_id'])
         if not tag or tag.user_id != current_user:
             return {"message": "Tag not found or not authorized", "status": "fail"}, 403
