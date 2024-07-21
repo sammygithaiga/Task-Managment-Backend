@@ -12,4 +12,3 @@ sqlalchemy-serializer
 pipenv
 shell
 psycopg2-binary
-psycopg2-binary

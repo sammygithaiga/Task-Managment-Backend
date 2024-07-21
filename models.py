@@ -51,7 +51,16 @@ class Project(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "user_id": self.user_id
+        }
+    
+    
+    
     serialize_only = ('id', 'title', 'description', 'created_at', 'updated_at')
 
     tasks = db.relationship('Task', backref='project', lazy=True)
@@ -72,7 +81,19 @@ class Task(db.Model, SerializerMixin):
     serialize_only = ('id', 'title', 'description', 'due_date', 'priority', 'status', 'created_at', 'updated_at')
 
     tags = db.relationship('Tag', secondary='task_tags', lazy='subquery', backref=db.backref('tasks', lazy=True))
-
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "due_date": self.due_date.strftime('%Y-%m-%d'),
+            "priority": self.priority,
+            "status": self.status,
+            "project_id": self.project_id
+        }
+    
+    
 class Tag(db.Model, SerializerMixin):
     __tablename__ = 'tag'
 
