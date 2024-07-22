@@ -5,7 +5,7 @@ from models import db, User
 from functools import wraps
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class SignupResource(Resource):
@@ -13,10 +13,9 @@ class SignupResource(Resource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('username', type=str, required=True, help="Username is required")
         self.parser.add_argument('email', type=str, required=True, help="Email address is required")
-        self.parser.add_argument('password_hash', type=str, required=True, help="Password_hash is required")
+        self.parser.add_argument('password', type=str, required=True, help="Password is required")
         self.parser.add_argument('role', type=str, required=True, help="Role is required")
-        self.parser.add_argument('Phone Number', type=str, required=True, help="Phone is required")
-        
+        self.parser.add_argument('phone', type=str, required=True, help="Phone is required")
         super(SignupResource, self).__init__()
 
     def post(self):
@@ -30,7 +29,7 @@ class SignupResource(Resource):
                 else:
                     return {"message": "Email address already taken", "status": "fail"}, 422
 
-            password_hash = generate_password_hash(data['password_hash']).decode('utf-8')
+            password_hash = generate_password_hash(data['password']).decode('utf-8')
 
             new_user = User(username=data['username'], email=data['email'], password_hash=password_hash, role=data['role'])
 
@@ -40,7 +39,6 @@ class SignupResource(Resource):
         except Exception as e:
             logger.error(f"Error during signup: {e}")
             return {"message": "Error creating user", "status": "fail", "error": str(e)}, 500
-
 
 class LoginResource(Resource):
     parser = reqparse.RequestParser()
@@ -57,6 +55,7 @@ class LoginResource(Resource):
                 if data['role'] == user.role:
                     user_dict = {"id": user.id, "role": user.role}
                     access_token = create_access_token(identity=user_dict)
+                    logger.debug(f"Generated Token: {access_token}")
                     if user.role == 'admin':
                         return {"message": "Login successful", "status": "success", "access_token": access_token, "user": user_dict, "redirect": "/admin"}
                     else:
@@ -68,7 +67,6 @@ class LoginResource(Resource):
         except Exception as e:
             logger.error(f"Error during login: {e}")
             return {"message": "Error during login", "status": "fail", "error": str(e)}, 500
-
 
 def admin_required(func):
     @wraps(func)
@@ -84,12 +82,12 @@ def admin_required(func):
             return {"message": "Error during authorization", "status": "fail", "error": str(e)}, 500
     return decorated_function
 
-
 class ProtectedResource(Resource):
     @jwt_required()
     def get(self):
         try:
             user_id = get_jwt_identity()
+            logger.debug(f"Decoded Token Identity: {user_id}")
             user = User.query.get(user_id)
             if user.role == 'admin':
                 return {"message": "Admin view"}
@@ -98,7 +96,6 @@ class ProtectedResource(Resource):
         except Exception as e:
             logger.error(f"Error in ProtectedResource: {e}")
             return {"message": "Error retrieving resource", "status": "fail", "error": str(e)}, 500
-
 
 class AdminResource(Resource):
     @jwt_required()

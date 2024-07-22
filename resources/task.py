@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Task, Project
 from datetime import datetime
+from jwt.exceptions import DecodeError
 
 class TaskResource(Resource):
     parser = reqparse.RequestParser()
@@ -21,14 +22,20 @@ class TaskResource(Resource):
                 return {"task": task.to_dict(), "status": "success"}, 200
             else:
                 return {"message": "Task not found", "status": "fail"}, 404
+        except DecodeError as e:
+            print(f"Token decoding error: {str(e)}")
+            return {"message": "Invalid token format", "status": "fail"}, 401
         except Exception as e:
             print(f"Error retrieving task: {str(e)}")
             return {"message": "Internal server error", "status": "fail"}, 500
 
+    
+    
     @jwt_required()
     def post(self):
         data = self.parser.parse_args()
         current_user = get_jwt_identity()
+        print(f"Current user identity: {current_user}")
 
         try:
             due_date = datetime.strptime(data['due_date'], '%Y-%m-%d').date()
@@ -39,7 +46,7 @@ class TaskResource(Resource):
         if not project:
             return {"message": "Project not found", "status": "fail"}, 404
 
-        if project.user_id != int(current_user):
+        if project.user_id != int(current_user['id']):
             return {"message": "Not authorized to add task to this project", "status": "fail"}, 403
 
         task = Task(
@@ -73,7 +80,7 @@ class TaskResource(Resource):
         if not project:
             return {"message": "Project not found", "status": "fail"}, 404
 
-        if project.user_id != int(current_user):
+        if project.user_id != int(current_user['id']):
             return {"message": "Not authorized to update this task", "status": "fail"}, 403
 
         task.title = data['title']
@@ -106,7 +113,7 @@ class TaskResource(Resource):
         if not project:
             return {"message": "Project not found", "status": "fail"}, 404
 
-        if project.user_id != int(current_user):
+        if project.user_id != int(current_user['id']):
             return {"message": "Not authorized to delete this task", "status": "fail"}, 403
 
         try:
@@ -117,3 +124,5 @@ class TaskResource(Resource):
             return {"message": "Error deleting task", "status": "fail", "error": str(e)}, 500
 
         return {"message": "Task deleted successfully", "status": "success"}
+
+

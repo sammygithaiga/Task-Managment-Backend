@@ -13,7 +13,8 @@ class ProjectResource(Resource):
     @jwt_required()
     def post(self):
         data = self.parser.parse_args()
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity.get('id')  # Extract the user ID from the dictionary
         
         new_project = Project(
             title=data['title'],
@@ -39,7 +40,8 @@ class ProjectItemResource(Resource):
     @jwt_required()
     def put(self, project_id):
         data = self.parser.parse_args()
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity.get('id')  # Extract the user ID from the dictionary
         
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
         
@@ -56,7 +58,8 @@ class ProjectItemResource(Resource):
 
     @jwt_required()
     def delete(self, project_id):
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity.get('id')  # Extract the user ID from the dictionary
         
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
         
@@ -70,7 +73,8 @@ class ProjectItemResource(Resource):
 
     @jwt_required()
     def get(self, project_id):
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity.get('id')  # Extract the user ID from the dictionary
         
         # Find the project
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
@@ -84,7 +88,8 @@ class ProjectItemResource(Resource):
 class ProjectListResource(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity.get('id')  # Extract the user ID from the dictionary
         
         # Get all projects for the user
         projects = Project.query.filter_by(user_id=user_id).all()
