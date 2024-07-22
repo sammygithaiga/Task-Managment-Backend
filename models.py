@@ -46,21 +46,22 @@ class Project(db.Model, SerializerMixin):
     __tablename__ = 'project'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    title = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.String(256), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Add ForeignKey constraint
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name,
-            "user_id": self.user_id
+            "title": self.title,
+            "description": self.description,
+            "user_id": self.user_id,
+            "created_at": self.created_at.isoformat(),  # Convert to ISO 8601 string
+            "updated_at": self.updated_at.isoformat()   # Convert to ISO 8601 string
         }
-    
-    
-    
+
     serialize_only = ('id', 'title', 'description', 'created_at', 'updated_at')
 
     tasks = db.relationship('Task', backref='project', lazy=True)
@@ -87,12 +88,11 @@ class Task(db.Model, SerializerMixin):
             "id": self.id,
             "title": self.title,
             "description": self.description,
-            "due_date": self.due_date.strftime('%Y-%m-%d'),
+            "due_date": self.due_date.isoformat(),  # Convert to ISO 8601 string
             "priority": self.priority,
             "status": self.status,
             "project_id": self.project_id
         }
-    
     
 class Tag(db.Model, SerializerMixin):
     __tablename__ = 'tag'

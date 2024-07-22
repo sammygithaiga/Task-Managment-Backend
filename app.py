@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 #from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, make_response, request
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_restful import Api, Resource
@@ -22,16 +23,16 @@ jwt_manager = JWTManager(app)
 api = Api(app)
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL')  #when commiting shoul be the one
-#app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///database.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL')  #when commiting shoul be the one
+app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///database.db'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 migrate = Migrate(app, db, render_as_batch=True)
 
@@ -52,7 +53,16 @@ api.add_resource(ProtectedResource, '/protected')
 api.add_resource(ProjectResource, '/project')
 api.add_resource(ProjectItemResource, '/project/<int:project_id>')
 api.add_resource(ProjectListResource, '/projects')
-api.add_resource(TaskResource, '/task/<int:task_id>')
+api.add_resource(TaskResource, '/tasks', '/tasks/<int:task_id>')
+
+@app.before_request
+def handle_preflight():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        return response
 
 if __name__ == '__main__':
     app.run(port=5000)
