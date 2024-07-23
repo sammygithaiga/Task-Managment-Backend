@@ -70,6 +70,24 @@ class TaskItemResource(Resource):
         super(TaskItemResource, self).__init__()
 
     @jwt_required()
+    def get(self, task_id):
+        task = Task.query.get(task_id)
+
+        if not task:
+            return {"message": "Task not found", "status": "fail"}, 404
+
+        current_user = get_jwt_identity()
+        project = Project.query.get(task.project_id)
+        if not project:
+            return {"message": "Project not found", "status": "fail"}, 404
+
+        if project.user_id != int(current_user['id']):
+            return {"message": "Not authorized to view this task", "status": "fail"}, 403
+
+        return jsonify({"task": task.to_dict()})
+
+
+    @jwt_required()
     def put(self, task_id):
         data = self.parser.parse_args()
         task = Task.query.get(task_id)
@@ -104,6 +122,7 @@ class TaskItemResource(Resource):
 
         return {"message": "Task updated successfully", "status": "success", "task": task.to_dict()}
 
+
     @jwt_required()
     def delete(self, task_id):
         task = Task.query.get(task_id)
@@ -111,4 +130,21 @@ class TaskItemResource(Resource):
         if not task:
             return {"message": "Task not found", "status": "fail"}, 404
 
-       
+        current_user = get_jwt_identity()
+        project = Project.query.get(task.project_id)
+        if not project:
+            return {"message": "Project not found", "status": "fail"}, 404
+
+        if project.user_id != int(current_user['id']):
+            return {"message": "Not authorized to delete this task", "status": "fail"}, 403
+
+        try:
+            db.session.delete(task)
+            db.session.commit()
+        except Exception as e:
+            print(f"Error deleting task: {str(e)}")
+            db.session.rollback()
+            return {"message": "Error deleting task", "status": "fail", "error": str(e)}, 500
+
+        return {"message": "Task deleted successfully", "status": "success"}
+
