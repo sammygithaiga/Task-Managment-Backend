@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-#from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, make_response, request
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -9,7 +8,7 @@ from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from models import db
 from resources.project import ProjectItemResource, ProjectListResource, ProjectResource
-from resources.task import TaskResource
+from resources.task import TaskResource,TaskListResource
 from resources.useer import LoginResource, SignupResource, AdminResource, ProtectedResource
 
 app = Flask(__name__)
@@ -26,7 +25,7 @@ api = Api(app)
 #app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL')  #when commiting shoul be the one
 app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///database.db'
 
-#app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -54,6 +53,7 @@ api.add_resource(ProjectResource, '/project')
 api.add_resource(ProjectItemResource, '/project/<int:project_id>')
 api.add_resource(ProjectListResource, '/projects')
 api.add_resource(TaskResource, '/tasks', '/tasks/<int:task_id>')
+api.add_resource(TaskListResource, '/tasks')
 
 @app.before_request
 def handle_preflight():

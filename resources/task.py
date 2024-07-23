@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Task, Project
 from datetime import datetime
 from jwt.exceptions import DecodeError
+import logging
 
 class TaskResource(Resource):
     parser = reqparse.RequestParser()
@@ -126,3 +127,15 @@ class TaskResource(Resource):
         return {"message": "Task deleted successfully", "status": "success"}
 
 
+class TaskListResource(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            token = request.headers.get('Authorization').split()[1]
+            logging.info(f"Received token: {token}")
+            
+            tasks = []  
+            return {'tasks': tasks}, 200
+        except Exception as e:
+            logging.error(f"Error: {str(e)}")
+            return {'message': 'An error occurred while fetching tasks'}, 500
