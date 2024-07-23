@@ -42,6 +42,7 @@ class ProjectItemResource(Resource):
         data = self.parser.parse_args()
         identity = get_jwt_identity()
         user_id = identity.get('id')  
+
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
         
         if not project:
@@ -88,8 +89,7 @@ class ProjectListResource(Resource):
     def get(self):
         identity = get_jwt_identity()
         user_id = identity.get('id')  
-        
-  
+
         projects = Project.query.filter_by(user_id=user_id).all()
         
         return {"projects": [project.to_dict() for project in projects]}, 200
