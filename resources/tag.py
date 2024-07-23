@@ -1,6 +1,7 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Tag
+from sqlalchemy.exc import IntegrityError
 
 class TagResource(Resource):
     parser = reqparse.RequestParser()
@@ -25,8 +26,12 @@ class TagResource(Resource):
             user_id=current_user
         )
 
-        db.session.add(new_tag)
-        db.session.commit()
+        try:
+            db.session.add(new_tag)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to create tag", "status": "fail"}, 400
 
         return {"message": "Tag created successfully", "status": "success", "tag": new_tag.to_dict()}, 201
 
@@ -45,7 +50,11 @@ class TagResource(Resource):
         tag.name = data['name']
         tag.description = data.get('description')
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to update tag", "status": "fail"}, 400
 
         return {"message": "Tag updated successfully", "status": "success", "tag": tag.to_dict()}
 
@@ -61,7 +70,12 @@ class TagResource(Resource):
             return {"message": "Not authorized to delete this tag", "status": "fail"}, 403
 
         db.session.delete(tag)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to delete tag", "status": "fail"}, 400
 
         return {"message": "Tag deleted successfully", "status": "success"}
 

@@ -1,4 +1,5 @@
 import os
+from flask import Flask
 from flask import Flask, make_response, request
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -8,6 +9,7 @@ from datetime import timedelta
 from models import db
 from resources.project import ProjectItemResource, ProjectListResource, ProjectResource
 from resources.task import TaskResource, TaskListResource, TaskItemResource
+from resources.task import TaskResource,TaskListResource
 from resources.useer import LoginResource, SignupResource, AdminResource, ProtectedResource
 
 app = Flask(__name__)
@@ -19,6 +21,7 @@ jwt_manager = JWTManager(app)
 api = Api(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] ='sqlite:///database.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -44,6 +47,7 @@ api.add_resource(ProjectItemResource, '/project/<int:project_id>')
 api.add_resource(ProjectListResource, '/projects')
 api.add_resource(TaskResource, '/task')
 api.add_resource(TaskItemResource, '/task/<int:task_id>')
+api.add_resource(TaskResource, '/tasks', '/tasks/<int:task_id>')
 api.add_resource(TaskListResource, '/tasks')
 
 @app.before_request

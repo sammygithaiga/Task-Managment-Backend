@@ -1,7 +1,7 @@
-
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Task, Tag, TaskTagAssociation, Project
+from sqlalchemy.exc import IntegrityError
 
 class TaskResource(Resource):
     parser = reqparse.RequestParser()
@@ -37,8 +37,12 @@ class TaskResource(Resource):
             project_id=data['project_id']
         )
 
-        db.session.add(task)
-        db.session.commit()
+        try:
+            db.session.add(task)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to create task", "status": "fail"}, 400
 
         return {"message": "Task created successfully", "status": "success", "task": task.to_dict()}, 201
 
@@ -105,8 +109,12 @@ class TagResource(Resource):
             user_id=current_user
         )
 
-        db.session.add(tag)
-        db.session.commit()
+        try:
+            db.session.add(tag)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to create tag", "status": "fail"}, 400
 
         return {"message": "Tag created successfully", "status": "success", "tag": tag.to_dict()}, 201
 
@@ -172,8 +180,12 @@ class TaskTagAssociationResource(Resource):
             tag_id=data['tag_id']
         )
 
-        db.session.add(association)
-        db.session.commit()
+        try:
+            db.session.add(association)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return {"message": "Failed to create association", "status": "fail"}, 400
 
         return {"message": "Task-Tag association created successfully", "status": "success"}, 201
 
