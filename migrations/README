@@ -1,1 +1,129 @@
-Single-database configuration for Flask.
+# Task Pulse Management App
+
+## Table of Contents
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+- [Models](#models)
+- [Database Relationships](#database-relationships)
+- [License](#license)
+
+## Introduction
+This is a Task and Project Management application built using Flask. It helps users manage their tasks and projects efficiently by keeping track of ongoing and upcoming tasks, thus saving time and resources.
+
+## Features
+- User authentication
+- Project creation and management
+- Task creation and management
+- Tagging system for tasks
+- CRUD operations for projects and tasks
+
+## Installation
+
+### Prerequisites
+- Python 3.x
+- Flask
+- Flask-SQLAlchemy
+- Flask-Migrate
+- Werkzeug
+
+### Steps
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/sammygithaiga/Task-Managment-Backend
+    
+    ```
+2. Create and activate a virtual environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
+3. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+4. Set up the database:
+    ```bash
+    flask db init
+    flask db migrate -m "Initial migration"
+    flask db upgrade
+    ```
+5. Run the application:
+    ```bash
+    flask run
+    ```
+
+## Usage
+The application provides a RESTful API for managing users, projects, and tasks. You can use tools like Postman or Curl to interact with the API.
+
+## API Endpoints
+
+### Authentication
+- **POST /login**: User login.
+
+### Projects
+- **POST /projects**: Create a new project.
+- **GET /projects**: List all projects.
+- **GET /projects/<int:id>**: Get details of a specific project.
+- **PUT /projects/<int:id>**: Update a specific project.
+- **DELETE /projects/<int:id>**: Delete a specific project.
+
+### Tasks
+- **POST /tasks**: Create a new task.
+- **GET /tasks**: List all tasks.
+- **GET /tasks/<int:id>**: Get details of a specific task.
+- **PUT /tasks/<int:id>**: Update a specific task.
+- **DELETE /tasks/<int:id>**: Delete a specific task.
+
+## Models
+
+### User
+- **id**: Primary key
+- **username**: Unique username
+- **email**: Unique email
+- **password_hash**: Password hash
+- **profile_picture**: Profile picture URL
+
+### Project
+- **id**: Primary key
+- **title**: Project title
+- **description**: Project description
+- **user_id**: Foreign key to User
+- **created_at**: Creation timestamp
+- **updated_at**: Update timestamp
+
+### Task
+- **id**: Primary key
+- **title**: Task title
+- **description**: Task description
+- **due_date**: Due date
+- **priority**: Task priority
+- **status**: Task status
+- **project_id**: Foreign key to Project
+- **created_at**: Creation timestamp
+- **updated_at**: Update timestamp
+
+### Tag
+- **id**: Primary key
+- **name**: Tag name
+
+### TaskTag
+- **id**: Primary key
+- **task_id**: Foreign key to Task
+- **tag_id**: Foreign key to Tag
+
+## Database Relationships
+- **User and Project**: One-to-many relationship
+- **Project and Task**: One-to-many relationship
+- **Task and Tag**: Many-to-many relationship
+## Contributors
+Samuel Githaiga
+Kevin Cheruiyot
+Nazlin Jemeli
+Collins Kipngeno
+Joshua Siema
+## License
+This project is licensed under the MIT License.
+
