@@ -16,7 +16,6 @@ db = SQLAlchemy(metadata=metadata)
 
 class CustomSerializer(SerializerMixin):
     def serialize(self, model):
-        # Implement serialization logic here
         pass
 
 class User(db.Model, SerializerMixin):

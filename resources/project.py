@@ -74,7 +74,8 @@ class ProjectItemResource(Resource):
     @jwt_required()
     def get(self, project_id):
         identity = get_jwt_identity()
-        user_id = identity.get('id') 
+
+        user_id = identity.get('id')  
         
         project = Project.query.filter_by(id=project_id, user_id=user_id).first()
         
